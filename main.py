@@ -1,16 +1,46 @@
-# This is a sample Python script.
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+def checkFour(player):
+    for i in range(ROW_COUNT):
+        for j in range(COLUMN_COUNT):
+
+            if verticalCheck(i, j, player):
+                return True
+
+            if horizontalCheck(i, j, player):
+                return True
+
+            if diagonalCheck(i, j, player):
+                return True
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+def verticalCheck(row, col, player):
+    # Boolean variable to check four in a row
+    flag = False
+    consecutive_count = 0
+    for i in range(row, ROW_COUNT):
+        if grid[i][col] == player:
+            consecutive_count += 1
+        else:
+            break
+
+    if consecutive_count >= 4:
+        flag = True
+
+    return flag
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+def horizontalCheck(row, col, player):
+    # Boolean variable to check four in a row
+    flag = False
+    consecutive_count = 0
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    for j in range(col, COLUMN_COUNT):
+        if grid[row][j] == player:
+            consecutive_count += 1
+        else:
+            break
+
+    if consecutive_count >= 4:
+        flag = True
+
+    return flag

@@ -44,3 +44,43 @@ def horizontalCheck(row, col, player):
         flag = True
 
     return flag
+
+
+
+def diagonalCheck(row, col, player):
+    rightSlope = False
+    leftSlope = False
+
+    # check for diagonals with right slope(POSITIVE SLOPE)
+
+    consecutive_count = 0
+    j = col
+    for i in range(row, 6):
+        if j > 6:
+            break
+        elif grid[i][j] == player:
+            consecutive_count += 1
+        else:
+            break
+        j += 1  # increment column when row is incremented
+
+    if consecutive_count >= 4:
+        rightSlope = True
+
+    # check for diagonals with left slope(NEGATIVE SLOPE)
+    consecutive_count = 0
+    j = col
+    for i in range(row, -1, -1):
+        if j > 6:
+            break
+        elif grid[i][j] == player:
+            consecutive_count += 1
+        else:
+            break
+        j += 1  # increment column when row is decremented
+
+    if consecutive_count >= 4:
+        leftSlope = True
+
+    slope = rightSlope or leftSlope
+    return slope

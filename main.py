@@ -85,7 +85,24 @@ def diagonalCheck(row, col, player):
     slope = rightSlope or leftSlope
     return slope
 
+def estimate(state):
+    center_count = 0
+    center_column = len(state[0]) // 2  # Calculate the index of the center column
 
+    for row in state:
+        if row[center_column] == AI_PIECE:
+            center_count += 1
+
+    my_fours = count_streak(state, AI_PIECE, 4)
+    my_threes = count_streak(state, AI_PIECE, 3)
+    my_twos = count_streak(state, AI_PIECE, 2)
+    opp_fours = count_streak(state, COMPUTER_PIECE, 4)
+    opp_threes = count_streak(state, COMPUTER_PIECE, 3)
+
+    if opp_fours > 0:
+        return -100000
+    else:
+        return center_count * 5 + my_fours * 200 + my_threes * 10 + my_twos * 3 + opp_threes * -6
 
 def count_streak(state, player, streak):
     count = 0
@@ -168,3 +185,4 @@ def diagonal_streak(row, col, state, streak):
         total += 1
 
     return total
+

@@ -1,3 +1,25 @@
+ROW_COUNT = 6
+COLUMN_COUNT = 7
+
+COMPUTER_PIECE = 1
+AI_PIECE = 2
+
+
+def isValidPos(grid, col):
+    return grid[ROW_COUNT - 1][col] == 0
+
+def get_valid_locations(board):
+    valid_locations = []
+    for col in range(COLUMN_COUNT):
+        if isValidPos(board, col):
+            valid_locations.append(col)
+    return valid_locations
+
+
+def getNextRow(grid, col):
+    for i in range(ROW_COUNT):
+        if grid[i][col] == 0:
+            return i
 
 def checkFour(player):
     for i in range(ROW_COUNT):

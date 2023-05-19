@@ -1,3 +1,5 @@
+import time
+
 import numpy
 import pygame
 import math
@@ -235,16 +237,27 @@ def minimax(grid, depth, maximizingPlayer, player):
                 column = col
         return column, min_eval
 
+def get_level_depth(level):
+    if level == 'Easy':
+        depth = 1
+    elif level == 'Medium':
+        depth = 3
+    else:
+        depth = 4
+    return depth
 
-def execute(depth, algorithm, opp):
+
+def execute(level, algorithm, opp):
     screen = pygame.display.set_mode(size)
     turn = 0
     grid = numpy.zeros((NUMBER_OF_ROWS, NUMBER_OF_COLUMNS))
     pygame.init()
     drawGrid(screen, grid)
     myFont = pygame.font.SysFont("monospace", 75)
+    myFont2 = pygame.font.SysFont("monospace", 58)
     endOfGame = False
 
+    depth = get_level_depth(level)
     while not endOfGame:
         for event in pygame.event.get():
             pygame.draw.rect(screen, BABYBLUE, (0, 0, width, SQUARESIZE))
@@ -259,13 +272,13 @@ def execute(depth, algorithm, opp):
                     grid[row][col] = OPPONENT_TOKEN
 
                     if checkWinner(grid, OPPONENT_TOKEN):
-                        label = myFont.render("Opp Agent wins", True, PURPLE)
+                        label = myFont2.render("Opponent Agent Won", True, PURPLE)
                         screen.blit(label, (40, 10))
                         endOfGame = True
 
                     drawGrid(screen, grid)
-                turn+= 1
-            
+                    turn += 1
+
             elif opp == "Human":
                 if event.type == pygame.MOUSEMOTION:
                     pygame.draw.rect(screen, BABYBLUE, (0, 0, width, SQUARESIZE))
@@ -285,18 +298,46 @@ def execute(depth, algorithm, opp):
                         grid[row][col] = OPPONENT_TOKEN
 
                         if checkWinner(grid, OPPONENT_TOKEN):
-                            label = myFont.render("Player wins", True, PURPLE)
+                            label = myFont.render("Player Won", True, PURPLE)
                             screen.blit(label, (40, 10))
                             endOfGame = True
 
                         drawGrid(screen, grid)
-                        turn +=1
+                        turn += 1
             else: #computer
-                pass
+                col = random.randint(0, NUMBER_OF_COLUMNS - 1)
+                if isValidPos(grid, col):
+                    pygame.time.wait(400)
+                    row = getNextRow(grid, col)
+                    grid[row][col] = OPPONENT_TOKEN
+
+                    if checkWinner(grid, OPPONENT_TOKEN):
+                        label = myFont.render("Computer Won", True, PURPLE)
+                        screen.blit(label, (40, 10))
+                        endOfGame = True
+
+                    drawGrid(screen, grid)
+                    turn += 1
 
 
         elif turn % 2 != 0: #AI turn
-            pass
+            if algorithm == 'Minimax':
+                col, score = minimax(grid, depth, True, AI_TOKEN)
+            else:
+                col, score = minimax_alpha_beta(grid, depth, -math.inf, math.inf, True)
+
+            if isValidPos(grid, col):
+                pygame.time.wait(200)
+                row = getNextRow(grid, col)
+                grid[row][col] = AI_TOKEN
+
+                if checkWinner(grid, AI_TOKEN):
+                    label = myFont.render("AI Agent Won", True, YELLOW)
+                    screen.blit(label, (40, 10))
+                    endOfGame = True
+
+                drawGrid(screen, grid)
+                turn += 1
 
         if len(getValidPositions(grid)) == 0:
             label = myFont.render("DRAW", True, WHITE)
@@ -346,13 +387,15 @@ selected_opponents = tk.StringVar()
 
 
 # Functions to handle selections
-def select_level():
+def select_level(event):
     selected_level.set(level_combobox.get())
 
-def select_algorithm():
+
+def select_algorithm(event):
     selected_algorithm.set(algorithm_combobox.get())
 
-def select_opponent():
+
+def select_opponent(event):
     selected_opponents.set(opponents_combobox.get())
 
 
@@ -371,7 +414,7 @@ algorithm_combobox.pack()
 algorithm_combobox.bind("<<ComboboxSelected>>", select_algorithm)
 
 # Create the opponent label and drop-down list
-opponents_label = ttk.Label(window, text="Select opponent:")
+opponents_label = ttk.Label(window, text="Select Agent Opponent:")
 opponents_label.pack(pady=10)
 opponents_combobox = ttk.Combobox(window, values=opponents, textvariable=selected_opponents)
 opponents_combobox.pack()
@@ -382,14 +425,9 @@ def selection():
     level = selected_level.get()
     algorithm = selected_algorithm.get()
     opp = selected_opponents.get()
-    if level == 'Easy':
-        depth = 1
-    elif level == 'Medium':
-        depth = 3
-    else:
-        depth = 4
     window.destroy()
-    execute(depth, algorithm, opp)
+    execute(level, algorithm, opp)
+
 
 start_button = ttk.Button(window, text="Start Game", command=selection)
 start_button.pack(pady=20)

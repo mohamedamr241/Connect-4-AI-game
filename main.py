@@ -161,3 +161,45 @@ def minimax(grid, depth, maximizingPlayer):
                 min_eval = new_score
                 column = col
         return column, min_eval
+def minimax_alpha_beta(grid, depth, alpha, beta, maximizingPlayer):
+    valid_locations = getValidPositions(grid)
+    if is_terminal_node(grid):
+        if checkWinner(grid, AI_TOKEN):
+            return (None, 100000000000000)
+        elif checkWinner(grid, COMPUTER_TOKEN):
+            return (None, -10000000000000)
+        else:  # Game is over, no more valid moves
+            return (None, 0)
+    if depth == 0:
+        return (None, estimate(grid))
+    if maximizingPlayer:
+        max_eval = -math.inf
+        column = 0
+        for col in valid_locations:
+            row = getNextRow(grid, col)
+            tmp_grid = grid.copy()
+            tmp_grid[row][col] = AI_TOKEN
+            new_score = minimax_alpha_beta(tmp_grid, depth - 1, alpha, beta, False)[1]
+            if new_score > max_eval:
+                max_eval = new_score
+                column = col
+            alpha = max(alpha, max_eval)
+            if alpha >= beta:
+                break
+        return column, max_eval
+
+    else:  # Minimizing player
+        min_eval = math.inf
+        column = random.choice(valid_locations)
+        for col in valid_locations:
+            row = getNextRow(grid, col)
+            tmp_grid = grid.copy()
+            tmp_grid[row][col] = COMPUTER_TOKEN
+            new_score = minimax_alpha_beta(tmp_grid, depth - 1, alpha, beta, True)[1]
+            if new_score < min_eval:
+                min_eval = new_score
+                column = col
+            beta = min(beta, min_eval)
+            if alpha >= beta:
+                break
+        return column, min_eval

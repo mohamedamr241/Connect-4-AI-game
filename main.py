@@ -1,5 +1,3 @@
-import time
-
 import numpy
 import pygame
 import math
@@ -378,7 +376,7 @@ opponents = ["AI Agent", "Human", "Computer(Random)"]
 # Create a Tkinter window
 window = tk.Tk()
 window.title("Connect-4 Game")
-window.geometry("730x700")
+window.geometry("400x400")
 
 # Variables to store the selected level and algorithm
 selected_level = tk.StringVar()

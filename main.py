@@ -1,4 +1,4 @@
-import numpy as np
+import numpy
 import pygame
 import math
 import sys
@@ -6,17 +6,17 @@ import random
 import tkinter as tk
 from tkinter import ttk
 
-NUMBER_OF_ROWS = 6
-NUMBER_OF_COLUMNS = 7
-
-COMPUTER_TOKEN = 1
-AI_TOKEN = 2
-
 BLUE = (0, 153, 153)
 BABYBLUE = (137, 207, 240)
 PURPLE = (204, 0, 204)
 YELLOW = (255, 255, 0)
 WHITE = (255, 255, 255)
+
+NUMBER_OF_ROWS = 6
+NUMBER_OF_COLUMNS = 7
+
+OPPONENT_TOKEN = 1
+AI_TOKEN = 2
 
 SQUARESIZE = 100
 width = NUMBER_OF_COLUMNS * SQUARESIZE
@@ -48,24 +48,29 @@ def checkWinner(grid, player):
         return True
 
 
-def estimate(grid):
+def estimate(grid, player):
+    if player == OPPONENT_TOKEN:
+        o_player = AI_TOKEN
+    else:
+        o_player = OPPONENT_TOKEN
+
     center_count = 0
     center_column = len(grid[0]) // 2
 
     for row in grid:
-        if row[center_column] == AI_TOKEN:
+        if row[center_column] == player:
             center_count += 1
 
-    AI_fours = count_streak(grid, AI_TOKEN, 4)
-    AI_threes = count_streak(grid, AI_TOKEN, 3)
-    AI_twos = count_streak(grid, AI_TOKEN, 2)
-    opp_fours = count_streak(grid, COMPUTER_TOKEN, 4)
-    opp_threes = count_streak(grid, COMPUTER_TOKEN, 3)
+    AI_fours = count_streak(grid, player, 4)
+    AI_threes = count_streak(grid, player, 3)
+    AI_twos = count_streak(grid, player, 2)
+    opp_fours = count_streak(grid, o_player, 4)
+    opp_threes = count_streak(grid, o_player, 3)
 
     if opp_fours > 0:
         return -100000
     else:
-        return center_count * 5 + AI_fours * 200 + AI_threes * 10 + AI_twos * 3 + opp_threes * -6
+        return center_count * 5 + AI_fours * 200 + AI_threes * 10 + AI_twos * 3 - opp_threes * 6
 
 
 # check if there are n numbers of streaks beside each other in vertically, horizontally and diagonally.
@@ -142,58 +147,20 @@ def diagonal_streak(row, col, grid, streak):
 
 
 def is_terminal_node(grid):
-    return checkWinner(grid, COMPUTER_TOKEN) or checkWinner(grid, AI_TOKEN) or len(getValidPositions(grid)) == 0
-
-
-def minimax(grid, depth, maximizingPlayer):
-    valid_positions = getValidPositions(grid)
-    if is_terminal_node(grid):
-        if checkWinner(grid, AI_TOKEN):
-            return (None, 100000000000000)
-        elif checkWinner(grid, COMPUTER_TOKEN):
-            return (None, -10000000000000)
-        else:  # Game is over, no more valid moves
-            return (None, 0)
-    if depth == 0:
-        return (None, estimate(grid))
-    if maximizingPlayer:
-        max_eval = -math.inf
-        column = 0
-        for col in valid_positions:
-            row = getNextRow(grid, col)
-            tmp_grid = grid.copy()
-            tmp_grid[row][col] = AI_TOKEN
-            new_score = minimax(tmp_grid, depth - 1, False)[1]
-            if new_score > max_eval:
-                max_eval = new_score
-                column = col
-        return column, max_eval
-
-    else:  # Minimizing player
-        min_eval = math.inf
-        column = random.choice(valid_positions)
-        for col in valid_positions:
-            row = getNextRow(grid, col)
-            tmp_grid = grid.copy()
-            tmp_grid[row][col] = COMPUTER_TOKEN
-            new_score = minimax(tmp_grid, depth - 1, True)[1]
-            if new_score < min_eval:
-                min_eval = new_score
-                column = col
-        return column, min_eval
+    return checkWinner(grid, OPPONENT_TOKEN) or checkWinner(grid, AI_TOKEN) or len(getValidPositions(grid)) == 0
 
 
 def minimax_alpha_beta(grid, depth, alpha, beta, maximizingPlayer):
     valid_locations = getValidPositions(grid)
     if is_terminal_node(grid):
         if checkWinner(grid, AI_TOKEN):
-            return (None, 100000000000000)
-        elif checkWinner(grid, COMPUTER_TOKEN):
-            return (None, -10000000000000)
+            return None, 100000000000000
+        elif checkWinner(grid, OPPONENT_TOKEN):
+            return None, -10000000000000
         else:  # Game is over, no more valid moves
-            return (None, 0)
+            return None, 0
     if depth == 0:
-        return (None, estimate(grid))
+        return None, estimate(grid, AI_TOKEN)
     if maximizingPlayer:
         max_eval = -math.inf
         column = 0
@@ -216,7 +183,7 @@ def minimax_alpha_beta(grid, depth, alpha, beta, maximizingPlayer):
         for col in valid_locations:
             row = getNextRow(grid, col)
             tmp_grid = grid.copy()
-            tmp_grid[row][col] = COMPUTER_TOKEN
+            tmp_grid[row][col] = OPPONENT_TOKEN
             new_score = minimax_alpha_beta(tmp_grid, depth - 1, alpha, beta, True)[1]
             if new_score < min_eval:
                 min_eval = new_score
@@ -227,6 +194,87 @@ def minimax_alpha_beta(grid, depth, alpha, beta, maximizingPlayer):
         return column, min_eval
 
 
+def minimax(grid, depth, maximizingPlayer, player):
+    if player == OPPONENT_TOKEN:
+        o_player = AI_TOKEN
+    else:
+        o_player = OPPONENT_TOKEN
+    valid_locations = getValidPositions(grid)
+    if is_terminal_node(grid):
+        if checkWinner(grid, player):
+            return None, 100000000000000
+        elif checkWinner(grid, o_player):
+            return None, -10000000000000
+        else:  # Game is over, no more valid moves
+            return None, 0
+    if depth == 0:
+        return None, estimate(grid, player)
+    if maximizingPlayer:
+        max_eval = -math.inf
+        column = 0
+        for col in valid_locations:
+            row = getNextRow(grid, col)
+            tmp_grid = grid.copy()
+            tmp_grid[row][col] = player
+            new_score = minimax(tmp_grid, depth - 1, False, player)[1]
+            if new_score > max_eval:
+                max_eval = new_score
+                column = col
+        return column, max_eval
+
+    else:  # Minimizing player
+        min_eval = math.inf
+        column = random.choice(valid_locations)
+        for col in valid_locations:
+            row = getNextRow(grid, col)
+            tmp_grid = grid.copy()
+            tmp_grid[row][col] = o_player
+            new_score = minimax(tmp_grid, depth - 1, True, player)[1]
+            if new_score < min_eval:
+                min_eval = new_score
+                column = col
+        return column, min_eval
+
+
+def execute(depth, algorithm, opp):
+    screen = pygame.display.set_mode(size)
+    turn = 0
+    grid = numpy.zeros((NUMBER_OF_ROWS, NUMBER_OF_COLUMNS))
+    pygame.init()
+    drawGrid(screen, grid)
+    myFont = pygame.font.SysFont("monospace", 75)
+    endOfGame = False
+
+    while not endOfGame:
+        for event in pygame.event.get():
+            pygame.draw.rect(screen, BABYBLUE, (0, 0, width, SQUARESIZE))
+            if event.type == pygame.QUIT:
+                sys.exit()
+        if turn % 2 == 0: #opponent turn
+            if opp == "AI Agent":
+                pass
+            elif opp == "Human":
+                pass
+            else: #computer
+                pass
+
+
+        elif turn % 2 != 0: #AI turn
+            pass
+
+        if len(getValidPositions(grid)) == 0:
+            label = myFont.render("DRAW", True, WHITE)
+            screen.blit(label, (40, 10))
+            pygame.display.update()
+            endOfGame = True
+
+        while endOfGame:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit()
+
+
+#GUI
 def drawGrid(screen, grid):
     for i in range(NUMBER_OF_COLUMNS):
         for j in range(NUMBER_OF_ROWS):
@@ -236,7 +284,7 @@ def drawGrid(screen, grid):
 
     for i in range(NUMBER_OF_COLUMNS):
         for j in range(NUMBER_OF_ROWS):
-            if grid[j][i] == COMPUTER_TOKEN:
+            if grid[j][i] == OPPONENT_TOKEN:
                 pygame.draw.circle(screen, PURPLE, (
                     int(i * SQUARESIZE + SQUARESIZE / 2), height - int(j * SQUARESIZE + SQUARESIZE / 2)), RADIUS)
             elif grid[j][i] == AI_TOKEN:
@@ -245,15 +293,15 @@ def drawGrid(screen, grid):
     pygame.display.update()
 
 
-# Define the levels and algorithms
+# Define the levels, algorithms and opponents
 levels = ["Easy", "Medium", "Hard"]
 algorithms = ["Minimax", "Alpha-Beta"]
-opponents = ["AI", "Human", "Random"]
+opponents = ["AI Agent", "Human", "Computer(Random)"]
 
 # Create a Tkinter window
 window = tk.Tk()
-window.title("Algorithm Selection")
-window.geometry("800x800")
+window.title("Connect-4 Game")
+window.geometry("730x700")
 
 # Variables to store the selected level and algorithm
 selected_level = tk.StringVar()
@@ -261,17 +309,14 @@ selected_algorithm = tk.StringVar()
 selected_opponents = tk.StringVar()
 
 
-# Function to handle level selection
-def select_level(event):
+# Functions to handle selections
+def select_level():
     selected_level.set(level_combobox.get())
 
-
-# Function to handle algorithm selection
-def select_algorithm(event):
+def select_algorithm():
     selected_algorithm.set(algorithm_combobox.get())
 
-
-def select_opponent(event):
+def select_opponent():
     selected_opponents.set(opponents_combobox.get())
 
 
@@ -289,7 +334,7 @@ algorithm_combobox = ttk.Combobox(window, values=algorithms, textvariable=select
 algorithm_combobox.pack()
 algorithm_combobox.bind("<<ComboboxSelected>>", select_algorithm)
 
-# Create the algorithm label and drop-down list
+# Create the opponent label and drop-down list
 opponents_label = ttk.Label(window, text="Select opponent:")
 opponents_label.pack(pady=10)
 opponents_combobox = ttk.Combobox(window, values=opponents, textvariable=selected_opponents)
@@ -297,8 +342,7 @@ opponents_combobox.pack()
 opponents_combobox.bind("<<ComboboxSelected>>", select_opponent)
 
 
-# Function to print the selected level and algorithm
-def print_selection():
+def selection():
     level = selected_level.get()
     algorithm = selected_algorithm.get()
     opp = selected_opponents.get()
@@ -309,12 +353,10 @@ def print_selection():
     else:
         depth = 4
     window.destroy()
-    #execute(depth, algorithm, opp)
+    execute(depth, algorithm, opp)
 
-
-# Create the button to print the selected level and algorithm
-print_button = ttk.Button(window, text="Start Game", command=print_selection)
-print_button.pack(pady=20)
+start_button = ttk.Button(window, text="Start Game", command=selection)
+start_button.pack(pady=20)
 
 # Run the Tkinter event loop
 window.mainloop()

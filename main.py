@@ -252,9 +252,45 @@ def execute(depth, algorithm, opp):
                 sys.exit()
         if turn % 2 == 0: #opponent turn
             if opp == "AI Agent":
-                pass
+                col, score = minimax(grid, 2, True, OPPONENT_TOKEN)
+                if isValidPos(grid, col):
+                    pygame.time.wait(400)
+                    row = getNextRow(grid, col)
+                    grid[row][col] = OPPONENT_TOKEN
+
+                    if checkWinner(grid, OPPONENT_TOKEN):
+                        label = myFont.render("Opp Agent wins", True, PURPLE)
+                        screen.blit(label, (40, 10))
+                        endOfGame = True
+
+                    drawGrid(screen, grid)
+                turn+= 1
+            
             elif opp == "Human":
-                pass
+                if event.type == pygame.MOUSEMOTION:
+                    pygame.draw.rect(screen, BABYBLUE, (0, 0, width, SQUARESIZE))
+                    posx = event.pos[0]
+                    pygame.draw.circle(screen, PURPLE, (posx, int(SQUARESIZE / 2)), RADIUS)
+                pygame.display.update()
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    pygame.draw.rect(screen, BABYBLUE, (0, 0, width, SQUARESIZE))
+
+                    posx = event.pos[0]
+                    col = int(math.floor(posx / SQUARESIZE))
+
+                    if isValidPos(grid, col):
+                        pygame.time.wait(200)
+                        row = getNextRow(grid, col)
+                        grid[row][col] = OPPONENT_TOKEN
+
+                        if checkWinner(grid, OPPONENT_TOKEN):
+                            label = myFont.render("Player wins", True, PURPLE)
+                            screen.blit(label, (40, 10))
+                            endOfGame = True
+
+                        drawGrid(screen, grid)
+                        turn +=1
             else: #computer
                 pass
 
